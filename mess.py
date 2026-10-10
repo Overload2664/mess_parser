@@ -173,11 +173,15 @@ class Mess:
 
                     i += 1
 
-                json_bank.append("".join(mess_human))
+                bank_idx = len(content)
+                mess_idx = len(json_bank)
+                mess_id = (bank_idx << 16) + mess_idx
+                json_bank.append({"id": mess_id, "message": "".join(mess_human)})
 
             content.append({"bank": json_bank})
 
         return json.dumps({"mess": content}, ensure_ascii=False, indent=4)
+
 
     def from_json(self, mess_json):
         content = json.loads(mess_json)
@@ -186,11 +190,12 @@ class Mess:
         for bank_group in content["mess"]:
             new_bank = []
             for mess in bank_group["bank"]:
+                mess_text = mess["message"]
                 new_mess = bytearray()
                 new_mess += b'\x0B'
                 i = 0
-                while i < len(mess):
-                    char = mess[i]
+                while i < len(mess_text):
+                    char = mess_text[i]
                     if(char == " "):
                         magic_code = parse_magic_syntax(char)
                         new_mess += magic_code.to_bytes(1, byteorder="big")
@@ -198,7 +203,7 @@ class Mess:
                         magic = [char]
                         while char != ">":
                             i += 1
-                            char = mess[i]
+                            char = mess_text[i]
                             magic.append(char)
                         magic = "".join(magic)
                         if(magic[1:3] == "0x"):
@@ -212,7 +217,7 @@ class Mess:
                         shape = [char]
                         while char != "]":
                             i += 1
-                            char = mess[i]
+                            char = mess_text[i]
                             shape.append(char)
                         shape = "".join(shape)
                         shape_code = char_to_code[shape]
@@ -233,13 +238,13 @@ lol.read("board_e.dat")
 lol.write("bordo.dat")
 xd = lol.to_json()
 
-lmao = Mess()
-lmao.from_json(xd)
-lmao.write("bordo2.dat")
-
 from pathlib import Path
 
 Path("lol.json").write_text(
     xd,
     encoding="utf-16",
 )
+
+lmao = Mess()
+lmao.from_json(xd)
+lmao.write("bordo2.dat")
