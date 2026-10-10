@@ -1,3 +1,7 @@
+import json
+
+from char_map import code_to_char, char_to_code, magic_syntax, parse_magic_syntax, is_simple_command, is_complex_command, complex_commands, format_magic_byte, parse_magic_byte
+
 class Mess:
     def __init__(self):
         self.content = []
@@ -114,12 +118,127 @@ class Mess:
         with open(path, "wb") as f:
             f.write(content)
 
-    def getter(id):
-        pass
+    def get(self, id):
+        bank_id = id >> 16
+        index_id = id  & 0xFFFF
 
-    def seter(self, id, value):
-        pass
+        return self.content[bank_id][index_id]
+
+    def change(self, id, byte_array):
+        bank_id = id >> 16
+        index_id = id  & 0xFFFF
+
+        self.content[bank_id][index_id] = byte_array
+
+    def add_bank(self):
+        self.content.append([])
+
+    def add(self, bank_id, byte_array):
+        self.content[bank_id].append(byte_array)
+
+    def to_json(self):
+        content = []
+
+        for bank in self.content:
+            json_bank = []
+            for mess in bank:
+                mess_human = []
+                i = 1 # The first is always the clear command so ignore it
+                while i < len(mess) - 1: # Ignore the last character as it's null termination
+                    code = mess[i]
+
+                    if 48 <= code < 255:
+                        char = code_to_char[code]
+                        if char == "":
+                            char = format_magic_byte(code)
+                        mess_human.append(char)
+
+                    elif code < 48 or code == 255:
+                        if is_simple_command(code):
+                            mess_human.append(magic_syntax(code))
+                        elif is_complex_command(code):
+                            if i + 1 >= len(mess):
+                                raise ValueError("Complex command is missing its index")
+
+                            index = mess[i + 1]
+                            mess_human.append(magic_syntax(code, index))
+                            i += 1  # Skip the index; it was consumed above
+                        else:
+                            mess_human.append(format_magic_byte(code))
+
+                    else:
+                        raise ValueError(f"Invalid number token: {code}")
+
+                    i += 1
+
+                json_bank.append("".join(mess_human))
+
+            content.append(json_bank)
+    
+        return json.dumps(content, ensure_ascii=False, indent=4)
+
+    def from_json(self, mess_json):
+        content = json.loads(mess_json)
+
+        new_content = []
+        for bank in content:
+            new_bank = []
+            for mess in bank:
+                new_mess = bytearray()
+                new_mess += b'\x0B'
+                i = 0
+                while i < len(mess):
+                    char = mess[i]
+                    if(char == " "):
+                        magic_code = parse_magic_syntax(char)
+                        new_mess += magic_code.to_bytes(1, byteorder="big")
+                    elif(char == "<"):
+                        magic = [char]
+                        while char != ">":
+                            i += 1
+                            char = mess[i]
+                            magic.append(char)
+                        magic = "".join(magic)
+                        if(magic[1:3] == "0x"):
+                            magic_code = parse_magic_byte(magic)
+                            new_mess += magic_code.to_bytes(1, byteorder="big")
+                        else:
+                            magic_codes = parse_magic_syntax(magic)
+                            for magic_code in magic_codes:
+                                new_mess += magic_code.to_bytes(1, byteorder="big")
+                    elif(char == "["):
+                        shape = [char]
+                        while char != "]":
+                            i += 1
+                            char = mess[i]
+                            shape.append(char)
+                        shape = "".join(shape)
+                        shape_code = char_to_code[shape]
+                        new_mess += shape_code.to_bytes(1, byteorder="big")
+                    else:
+                        code = char_to_code[char]
+                        new_mess += code.to_bytes(1, byteorder="big")
+
+                    i += 1
+                new_mess += b'\x00'
+                new_bank.append(new_mess)
+            new_content.append(new_bank)
+
+        self.content = new_content
+
 
 lol = Mess()
 lol.read("board_e.dat")
-lol.write("boarder.dat")
+lol.write("bordo.dat")
+xd = lol.to_json()
+
+lmao = Mess()
+lmao.from_json(xd)
+lmao.write("bordo2.dat")
+
+from pathlib import Path
+
+Path("lol.json").write_text(
+    xd,
+    encoding="utf-16",
+)
