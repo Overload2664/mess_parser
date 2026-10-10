@@ -178,7 +178,7 @@ def magic_syntax(command: int, index: int | None = None) -> str:
         return f"<sprite index={_require_index(index) - 1}>"
     if command == 15:
         return "<choice>"
-    if command in (16, 32):
+    if command == 16:
         return " "
     if command == 28:
         return f"<audio index={_require_index(index) - 1}>"
@@ -191,6 +191,8 @@ def magic_syntax(command: int, index: int | None = None) -> str:
         return f"<color index={value - 1}>"
     if command == 31:
         return f"<insert index={_require_index(index) - 1}>"
+    if command == 32:
+        return "<long-space>"
     if command == 255:
         return "<wait-for-key>"
     else:
@@ -202,7 +204,8 @@ simple_commands = {
     "<clear>": 11,
     "<tab>": 12,
     "<choice>": 15,
-    " ": 16,  # Also represents command 32; see note below.
+    " ": 16,
+    "<long-space>": 32,
     "<toggle-outline>": 29,
     "<wait-for-key>": 255,
 }
