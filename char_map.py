@@ -215,7 +215,8 @@ complex_commands = {
 }
 
 def is_simple_command(command: int) -> bool:
-    return command in simple_commands.values() or command == 16 # 16 is also acceptable for space
+    # 32 is also acceptable for space
+    return command in simple_commands.values() or command == 32
 
 def is_complex_command(command: int) -> bool:
     return command in complex_commands.values()
