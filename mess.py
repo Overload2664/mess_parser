@@ -141,10 +141,12 @@ class Mess:
 
         for bank in self.content:
             json_bank = []
+
             for mess in bank:
                 mess_human = []
-                i = 1 # The first is always the clear command so ignore it
-                while i < len(mess) - 1: # Ignore the last character as it's null termination
+                i = 1  # Ignore the first clear command
+
+                while i < len(mess) - 1:  # Ignore the null terminator
                     code = mess[i]
 
                     if 48 <= code < 255:
@@ -162,7 +164,7 @@ class Mess:
 
                             index = mess[i + 1]
                             mess_human.append(magic_syntax(code, index))
-                            i += 1  # Skip the index; it was consumed above
+                            i += 1
                         else:
                             mess_human.append(format_magic_byte(code))
 
@@ -173,17 +175,17 @@ class Mess:
 
                 json_bank.append("".join(mess_human))
 
-            content.append(json_bank)
-    
-        return json.dumps(content, ensure_ascii=False, indent=4)
+            content.append({"bank": json_bank})
+
+        return json.dumps({"mess": content}, ensure_ascii=False, indent=4)
 
     def from_json(self, mess_json):
         content = json.loads(mess_json)
 
         new_content = []
-        for bank in content:
+        for bank_group in content["mess"]:
             new_bank = []
-            for mess in bank:
+            for mess in bank_group["bank"]:
                 new_mess = bytearray()
                 new_mess += b'\x0B'
                 i = 0
@@ -225,7 +227,6 @@ class Mess:
             new_content.append(new_bank)
 
         self.content = new_content
-
 
 lol = Mess()
 lol.read("board_e.dat")
