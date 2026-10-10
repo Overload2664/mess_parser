@@ -1,4 +1,6 @@
 import json
+import os
+from pathlib import Path
 
 from char_map import code_to_char, char_to_code, magic_syntax, parse_magic_syntax, is_simple_command, is_complex_command, complex_commands, format_magic_byte, parse_magic_byte
 
@@ -233,18 +235,35 @@ class Mess:
 
         self.content = new_content
 
+    def to_dir(self, path):
+        mess_json = json.loads(self.to_json())
+
+        for bank_id, bank_group in enumerate(mess_json["mess"]):
+            bank_path = f"{path}/bank_{bank_id}"
+            os.makedirs(bank_path, exist_ok=True)
+
+            for mess in bank_group["bank"]:
+                mess_id = mess["id"] & 0xFFFF
+                with open(f"{bank_path}/{mess_id}.mess", "w", encoding="utf-8") as mess_file:
+                    mess_file.write(f"{mess['id']}\n{mess['message']}")
+
+    def from_dir(self, path):
+        mess_json = {"mess": []}
+
+        for bank_path in sorted(Path(path).glob("bank_*"), key=lambda b: int(b.name[5:])):
+            bank = []
+            for mess_path in sorted(bank_path.glob("*.mess"), key=lambda m: int(m.stem)):
+                mess = mess_path.read_text(encoding="utf-8").split("\n", 1)
+                bank.append({"id": int(mess[0]), "message": mess[1] if len(mess) > 1 else ""})
+
+            mess_json["mess"].append({"bank": bank})
+
+        self.from_json(json.dumps(mess_json, ensure_ascii=False))
+
 lol = Mess()
 lol.read("board_e.dat")
-lol.write("bordo.dat")
-xd = lol.to_json()
+lol.to_dir("xd")
 
-from pathlib import Path
-
-Path("lol.json").write_text(
-    xd,
-    encoding="utf-16",
-)
-
-lmao = Mess()
-lmao.from_json(xd)
-lmao.write("bordo2.dat")
+wow = Mess()
+wow.from_dir("xd")
+wow.write("boardment")
