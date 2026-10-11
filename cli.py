@@ -19,13 +19,13 @@ def main():
 
     if args.to_json:
         mess.read(args.path)
-        with open(args.to_json, "w", encoding="utf-16") as json_file:
+        with open(args.to_json, "w", encoding="utf-8") as json_file:
             json_file.write(mess.to_json())
     elif args.to_dir:
         mess.read(args.path)
         mess.to_dir(args.to_dir)
     elif args.from_json:
-        mess.from_json(open(args.from_json, encoding="utf-16").read())
+        mess.from_json(open(args.from_json, encoding="utf-8").read())
         mess.write(args.path)
     else:
         mess.from_dir(args.from_dir)
