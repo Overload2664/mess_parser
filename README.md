@@ -1,6 +1,8 @@
-# mess_view_mp4
+# mess_parser
 
 Reads and edits the message archives (`.dat` files) from Mario Party 4, converting between the binary file to and from a JSON file or a directory of text files.
+
+This tool may work with other entries but no testing is done.
 
 ## Usage
 
