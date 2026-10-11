@@ -4,6 +4,19 @@ Reads and edits the message archives (`.dat` files) from Mario Party 4, converti
 
 This tool may work with other entries but no testing is done.
 
+## Download
+Either [download the tool](https://github.com/Overload2664/mess_parser/releases/latest/download/mess_reader.exe) and run commands with:
+```sh
+mess_reader.exe ...
+```
+
+or run it manually with (Python is required):
+```sh
+git clone https://github.com/Overload2664/mess_parser
+cd mess_parser
+python3 cli.py ...
+```
+
 ## Usage
 
 One positional argument (the `.dat`) plus exactly one conversion flag. With `--to-*` the `.dat` is the input; with `--from-*` it is the output.
