@@ -259,11 +259,3 @@ class Mess:
             mess_json["mess"].append({"bank": bank})
 
         self.from_json(json.dumps(mess_json, ensure_ascii=False))
-
-lol = Mess()
-lol.read("board_e.dat")
-lol.to_dir("xd")
-
-wow = Mess()
-wow.from_dir("xd")
-wow.write("boardment")
