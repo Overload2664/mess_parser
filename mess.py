@@ -10,6 +10,10 @@ class Mess:
 
     def read(self, path):
         with open(path, "rb") as mess_file:
+            mess_file.seek(0, 2)  # move to end
+            mess_size = mess_file.tell()
+            mess_file.seek(0)     # return to start if you plan to read it
+
             data = mess_file.read(4) # First 4 bytes are max_bank size
             # Bank number is more like max_bank - 1, because one is reserved for the byte just after the file
             max_bank = int.from_bytes(data, byteorder="big", signed=True) - 1 
@@ -55,14 +59,21 @@ class Mess:
 
                 for j in range(len(indices_offset)):
                     byte_array = bytearray()
-                    mess_file.seek(bank_offsets[i] + indices_offset[j])
+                    offset = bank_offsets[i] + indices_offset[j]
+                    if(offset >= mess_size):
+                        continue
+
+                    mess_file.seek(offset)
+                    current_byte = offset
                     
-                    while(True):
+                    while(current_byte <= mess_size):
                         next_byte = mess_file.read(1)
                         byte_array += next_byte
 
                         if(next_byte == b'\x00'):
                             break
+
+                        current_byte += 1
 
                     bank_content.append(byte_array)
 
